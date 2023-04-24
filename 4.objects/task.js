@@ -62,7 +62,7 @@ Student.prototype.exclude = function(reason) {
 
 
 
-// Пример использования
+
 
 let student1 = new Student("Василиса", "женский", 19);
 

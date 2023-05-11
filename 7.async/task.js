@@ -1,12 +1,8 @@
 class AlarmClock {
 
-  constructor() {
+  #timerId = null;
 
-    this.alarmCollection = [];
-
-    this.intervalId = null;
-
-  }
+  #alarms = new Map();
 
 
 
@@ -20,11 +16,9 @@ class AlarmClock {
 
 
 
-    const foundAlarm = this.alarmCollection.find(alarm => alarm.id === id);
+    if (this.#alarms.has(id)) {
 
-    if (foundAlarm) {
-
-      console.warn('Уже присутствует звонок на это же время');
+      console.warn(`Звонок с идентификатором ${id} уже существует`);
 
       return;
 
@@ -32,17 +26,7 @@ class AlarmClock {
 
 
 
-    this.alarmCollection.push({
-
-      id,
-
-      time,
-
-      callback,
-
-      canCall: true
-
-    });
+    this.#alarms.set(id, { time, callback, canCall: true });
 
   }
 
@@ -50,11 +34,7 @@ class AlarmClock {
 
   removeClock(id) {
 
-    const initialLength = this.alarmCollection.length;
-
-    this.alarmCollection = this.alarmCollection.filter(alarm => alarm.id !== id);
-
-    return initialLength !== this.alarmCollection.length;
+    return this.#alarms.delete(id);
 
   }
 
@@ -76,7 +56,7 @@ class AlarmClock {
 
   start() {
 
-    if (this.intervalId) {
+    if (this.#timerId) {
 
       return;
 
@@ -84,11 +64,11 @@ class AlarmClock {
 
 
 
-    this.intervalId = setInterval(() => {
+    this.#timerId = setInterval(() => {
 
       const currentTime = this.getCurrentFormattedTime();
 
-      this.alarmCollection.forEach(alarm => {
+      for (const [id, alarm] of this.#alarms.entries()) {
 
         if (alarm.time === currentTime && alarm.canCall) {
 
@@ -96,9 +76,11 @@ class AlarmClock {
 
           alarm.callback();
 
+          this.removeClock(id);
+
         }
 
-      });
+      }
 
     }, 1000);
 
@@ -108,9 +90,9 @@ class AlarmClock {
 
   stop() {
 
-    clearInterval(this.intervalId);
+    clearInterval(this.#timerId);
 
-    this.intervalId = null;
+    this.#timerId = null;
 
   }
 
@@ -118,7 +100,11 @@ class AlarmClock {
 
   resetAllCalls() {
 
-    this.alarmCollection.forEach(alarm => alarm.canCall = true);
+    for (const alarm of this.#alarms.values()) {
+
+      alarm.canCall = true;
+
+    }
 
   }
 
@@ -128,8 +114,10 @@ class AlarmClock {
 
     this.stop();
 
-    this.alarmCollection = [];
+    this.#alarms.clear();
 
   }
 
 }
+
+

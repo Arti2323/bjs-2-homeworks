@@ -1,123 +1,89 @@
 class AlarmClock {
-
-  #timerId = null;
-
-  #alarms = new Map();
-
-
+  constructor() {
+    this.alarmCollection = [];
+    this.intervalId = null;
+  }
 
   addClock(time, callback, id) {
-
-    if (!time || !callback) {
-
+    if (!id) {
       throw new Error('Отсутствуют обязательные аргументы');
-
     }
 
-
-
-    if (this.#alarms.has(id)) {
-
-      console.warn(`Звонок с идентификатором ${id} уже существует`);
-
+    if (this.alarmCollection.some((alarm) => alarm.id === id)) {
+      console.warn('Уже присутствует звонок с таким id');
       return;
-
     }
 
-
-
-    this.#alarms.set(id, { time, callback, canCall: true });
-
+    this.alarmCollection.push({ id, time, callback, canCall: true });
   }
-
-
 
   removeClock(id) {
+    const index = this.alarmCollection.findIndex((alarm) => alarm.id === id);
+    if (index === -1) {
+      return false;
+    }
 
-    return this.#alarms.delete(id);
-
+    this.alarmCollection.splice(index, 1);
+    return true;
   }
-
-
 
   getCurrentFormattedTime() {
-
     const now = new Date();
-
     const hours = now.getHours().toString().padStart(2, '0');
-
     const minutes = now.getMinutes().toString().padStart(2, '0');
-
     return `${hours}:${minutes}`;
-
   }
-
-
 
   start() {
-
-    if (this.#timerId) {
-
+    if (this.intervalId) {
       return;
-
     }
 
-
-
-    this.#timerId = setInterval(() => {
-
+    const checkAlarms = () => {
       const currentTime = this.getCurrentFormattedTime();
-
-      for (const [id, alarm] of this.#alarms.entries()) {
-
+      this.alarmCollection.forEach((alarm) => {
         if (alarm.time === currentTime && alarm.canCall) {
-
           alarm.canCall = false;
-
           alarm.callback();
-
-          this.removeClock(id);
-
         }
+      });
+    };
 
-      }
-
-    }, 1000);
-
+    checkAlarms();
+    this.intervalId = setInterval(checkAlarms, 1000);
   }
-
-
 
   stop() {
-
-    clearInterval(this.#timerId);
-
-    this.#timerId = null;
-
+    clearInterval(this.intervalId);
+    this.intervalId = null;
   }
-
-
 
   resetAllCalls() {
-
-    for (const alarm of this.#alarms.values()) {
-
-      alarm.canCall = true;
-
-    }
-
+    this.alarmCollection.forEach((alarm) => alarm.canCall = true);
   }
-
-
 
   clearAlarms() {
-
     this.stop();
-
-    this.#alarms.clear();
-
+    this.alarmCollection = [];
   }
-
 }
+
+
+
+const clock = new AlarmClock();
+
+clock.addClock('08:00', () => console.log('Пора вставать'), 1);
+clock.addClock('08:01', () => console.log('Давай, вставай уже!'), 2);
+clock.addClock('08:01', () => console.log('Иди умываться'), 3);
+
+clock.removeClock(2);
+
+clock.start();
+
+setTimeout(() => {
+  clock.stop();
+  clock.resetAllCalls();
+  clock.clearAlarms();
+}, 10000);
 
 

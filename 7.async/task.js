@@ -86,4 +86,31 @@ setTimeout(() => {
   clock.clearAlarms();
 }, 10000);
 
+stop() {
+
+    clearInterval(this.intervalId);
+
+    this.intervalId = null;
+
+  }
+
+ 
+
+  resetAllCalls() {
+
+    this.alarmCollection.forEach(alarm => alarm.canCall = true);
+
+  }
+
+ 
+
+  clearAlarms() {
+
+    this.stop();
+
+    this.alarmCollection = [];
+
+  }
+
+}
 
